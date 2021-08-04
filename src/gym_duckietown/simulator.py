@@ -207,6 +207,7 @@ class Simulator(gym.Env):
     def __init__(
         self,
         map_name: str = DEFAULT_MAP_NAME,
+        is_external_map: bool = False,
         max_steps: int = DEFAULT_MAX_STEPS,
         draw_curve: bool = False,
         draw_bbox: bool = False,
@@ -233,6 +234,7 @@ class Simulator(gym.Env):
         """
 
         :param map_name:
+        :param is_external_map:
         :param max_steps:
         :param draw_curve:
         :param draw_bbox:
@@ -274,6 +276,9 @@ class Simulator(gym.Env):
 
         # Map name, set in _load_map()
         self.map_name = None
+
+        # Whether the map is to be loaded from an external path
+        self.is_external_map = is_external_map
 
         # Full map file path, set in _load_map()
         self.map_file_path = None
@@ -346,7 +351,7 @@ class Simulator(gym.Env):
         self.accept_start_angle_deg = accept_start_angle_deg
 
         # Load the map
-        self._load_map(map_name)
+        self._load_map(map_name, self.is_external_map)
 
         # Distortion params, if so, load the library, only if not bbox mode
         self.distortion = distortion and not draw_bbox
@@ -762,7 +767,7 @@ class Simulator(gym.Env):
         # Return first observation
         return obs
 
-    def _load_map(self, map_name: str):
+    def _load_map(self, map_name: str, external: bool = False):
         """
         Load the map layout from a YAML file
         """
@@ -771,7 +776,7 @@ class Simulator(gym.Env):
         self.map_name = map_name
 
         # Get the full map file path
-        self.map_file_path = get_resource_path(f"{map_name}.yaml")
+        self.map_file_path = map_name if external else get_resource_path(f"{map_name}.yaml")
 
         logger.debug(f'loading map file "{self.map_file_path}"')
 
