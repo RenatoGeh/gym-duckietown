@@ -6,6 +6,7 @@ dependencies:
     - python
     - pytorch
     - torchvision
+    - tensorflow
     - pyzmq
     - numpy
     - pyyaml
