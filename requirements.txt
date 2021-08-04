@@ -2,3 +2,4 @@
 duckietown-world-daffy
 pipdeptree
 typing-extensions
+carnivalmirror

@@ -3,12 +3,13 @@ channels:
     - pytorch
     - defaults
 dependencies:
-    - python=3.6
-    - pytorch=0.3
+    - python
+    - pytorch
     - torchvision
     - pyzmq
     - numpy
-    - pyyaml=3.12
+    - pyyaml
+    - termcolor
     - pip:
         - gym
         - pyglet
