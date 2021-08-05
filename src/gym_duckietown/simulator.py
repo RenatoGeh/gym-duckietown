@@ -174,7 +174,7 @@ DEFAULT_ACCEPT_START_ANGLE_DEG = 60
 
 REWARD_INVALID_POSE = -1000
 
-MAX_SPAWN_ATTEMPTS = 5000
+MAX_SPAWN_ATTEMPTS = 1
 
 LanePosition0 = namedtuple("LanePosition", "dist dot_dir angle_deg angle_rad")
 
@@ -230,6 +230,7 @@ class Simulator(gym.Env):
         color_sky: Sequence[float] = BLUE_SKY,
         style: str = "photos",
         enable_leds: bool = False,
+        enable_sun: bool = True,
     ):
         """
 
@@ -254,6 +255,7 @@ class Simulator(gym.Env):
         :param randomize_maps_on_reset: If true, randomizes the map on reset (Slows down training)
         :param style: String that represent which tiles will be loaded. One of ["photos", "synthetic"]
         :param enable_leds: Enables LEDs drawing.
+        :param enable_sun: Enable sun.
         """
         self.enable_leds = enable_leds
         information = get_graphics_information()
@@ -381,6 +383,8 @@ class Simulator(gym.Env):
                 _map for _map in self.map_names if not _map.startswith(("calibration", "regress"))
             ]
             self.map_names = [mapfile.replace(".yaml", "") for mapfile in self.map_names]
+
+        self.enable_sun = enable_sun
 
         # Initialize the state
         self.reset()
@@ -567,26 +571,27 @@ class Simulator(gym.Env):
             self.horizon_color = self.color_sky
 
         # Setup some basic lighting with a far away sun
-        if self.domain_rand:
-            light_pos = self.randomization_settings["light_pos"]
-        else:
-            # light_pos = [-40, 200, 100, 0.0]
+        if self.enable_sun:
+            if self.domain_rand:
+                light_pos = self.randomization_settings["light_pos"]
+            else:
+                # light_pos = [-40, 200, 100, 0.0]
 
-            light_pos = [0.0, 3.0, 0.0, 1.0]
+                light_pos = [0.0, 3.0, 0.0, 1.0]
 
-        # DIM = 0.0
-        ambient = np.array([0.50 * DIM, 0.50 * DIM, 0.50 * DIM, 1])
-        ambient = self._perturb(ambient, 0.3)
-        diffuse = np.array([0.70 * DIM, 0.70 * DIM, 0.70 * DIM, 1])
-        diffuse = self._perturb(diffuse, 0.99)
-        # specular = np.array([0.3, 0.3, 0.3, 1])
-        specular = np.array([0.0, 0.0, 0.0, 1])
+            # DIM = 0.0
+            ambient = np.array([0.50 * DIM, 0.50 * DIM, 0.50 * DIM, 1])
+            ambient = self._perturb(ambient, 0.3)
+            diffuse = np.array([0.70 * DIM, 0.70 * DIM, 0.70 * DIM, 1])
+            diffuse = self._perturb(diffuse, 0.99)
+            # specular = np.array([0.3, 0.3, 0.3, 1])
+            specular = np.array([0.0, 0.0, 0.0, 1])
 
-        logger.info(light_pos=light_pos, ambient=ambient, diffuse=diffuse, specular=specular)
-        gl.glLightfv(gl.GL_LIGHT0, gl.GL_POSITION, (gl.GLfloat * 4)(*light_pos))
-        gl.glLightfv(gl.GL_LIGHT0, gl.GL_AMBIENT, (gl.GLfloat * 4)(*ambient))
-        gl.glLightfv(gl.GL_LIGHT0, gl.GL_DIFFUSE, (gl.GLfloat * 4)(*diffuse))
-        gl.glLightfv(gl.GL_LIGHT0, gl.GL_SPECULAR, (gl.GLfloat * 4)(*specular))
+            logger.info(light_pos=light_pos, ambient=ambient, diffuse=diffuse, specular=specular)
+            gl.glLightfv(gl.GL_LIGHT0, gl.GL_POSITION, (gl.GLfloat * 4)(*light_pos))
+            gl.glLightfv(gl.GL_LIGHT0, gl.GL_AMBIENT, (gl.GLfloat * 4)(*ambient))
+            gl.glLightfv(gl.GL_LIGHT0, gl.GL_DIFFUSE, (gl.GLfloat * 4)(*diffuse))
+            gl.glLightfv(gl.GL_LIGHT0, gl.GL_SPECULAR, (gl.GLfloat * 4)(*specular))
 
         # gl.glLightfv(gl.GL_LIGHT0, gl.GL_CONSTANT_ATTENUATION, (gl.GLfloat * 1)(0.4))
         # gl.glLightfv(gl.GL_LIGHT0, gl.GL_LINEAR_ATTENUATION, (gl.GLfloat * 1)(0.3))
@@ -1416,13 +1421,13 @@ class Simulator(gym.Env):
         coords = self.get_grid_coords(pos)
         tile = self._get_tile(*coords)
         if tile is None:
-            msg = f"No tile found at {pos} {coords}"
-            logger.debug(msg)
+            # msg = f"No tile found at {pos} {coords}"
+            # logger.debug(msg)
             return False
 
         if not tile["drivable"]:
-            msg = f"{pos} corresponds to tile at {coords} which is not drivable: {tile}"
-            logger.debug(msg)
+            # msg = f"{pos} corresponds to tile at {coords} which is not drivable: {tile}"
+            # logger.debug(msg)
             return False
 
         return True
@@ -1523,13 +1528,13 @@ class Simulator(gym.Env):
 
         res = no_collision and all_drivable
 
-        if not res:
-            logger.debug(f"Invalid pose. Collision free: {no_collision} On drivable area: {all_drivable}")
-            logger.debug(f"safety_factor: {safety_factor}")
-            logger.debug(f"pos: {pos}")
-            logger.debug(f"l_pos: {l_pos}")
-            logger.debug(f"r_pos: {r_pos}")
-            logger.debug(f"f_pos: {f_pos}")
+        # if not res:
+            # logger.debug(f"Invalid pose. Collision free: {no_collision} On drivable area: {all_drivable}")
+            # logger.debug(f"safety_factor: {safety_factor}")
+            # logger.debug(f"pos: {pos}")
+            # logger.debug(f"l_pos: {l_pos}")
+            # logger.debug(f"r_pos: {r_pos}")
+            # logger.debug(f"f_pos: {f_pos}")
 
         return res
 
