@@ -12,6 +12,8 @@ dependencies:
     - pyyaml
     - termcolor
     - opencv
+    - matplotlib
+    - scikit-learn
     - pip
     - pip:
         - gym
