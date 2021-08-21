@@ -1,4 +1,6 @@
 # coding=utf-8
+import random
+import math
 import numpy as np
 from gym import spaces
 
@@ -71,6 +73,21 @@ class DuckietownEnv(Simulator):
         info["DuckietownEnv"] = mine
         return obs, reward, done, info
 
+class DuckietownNoisyEnv(Simulator):
+
+    def __init__(self, mu_l: float = 0.0, std_l: float = 0.001,
+                 mu_r: float = 0.0, std_r: float = 0.0001, **kwargs):
+        Simulator.__init__(self, **kwargs)
+
+        self.mu_l, self.std_l = mu_l, std_l
+        self.mu_r, self.std_r = mu_r, std_r
+
+    def step(self, action):
+        if not math.isclose(action[0], 0, abs_tol = 1e-5):
+            action[0] += random.gauss(self.mu_l, self.std_l)
+        if not math.isclose(action[1], 0, abs_tol = 1e-5):
+            action[1] += random.gauss(self.mu_r, self.std_r)
+        return Simulator.step(self, action)
 
 class DuckietownLF(DuckietownEnv):
     """

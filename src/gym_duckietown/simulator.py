@@ -665,6 +665,9 @@ class Simulator(gym.Env):
             else:
                 obj.visible = True
 
+        return self.reset_pos(segment = segment)
+
+    def reset_pos(self, segment = False):
         # If the map specifies a starting tile
         if self.user_tile_start:
             logger.info(f"using user tile start: {self.user_tile_start}")
@@ -771,6 +774,7 @@ class Simulator(gym.Env):
 
         # Return first observation
         return obs
+
 
     def _load_map(self, map_name: str, external: bool = False):
         """
