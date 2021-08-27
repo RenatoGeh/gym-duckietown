@@ -1387,9 +1387,14 @@ class Simulator(gym.Env):
         cps = curves[np.argmax(dot_prods)]
 
         # Find closest point and tangent to this curve
+
         t = bezier_closest(cps, pos) + delta
         point = bezier_point(cps, t)
         tangent = bezier_tangent(cps, t)
+
+        if delta != 0:
+            p_0 = bezier_point(cps, bezier_closest(cps, pos))
+            return point, tangent, p_0
 
         return point, tangent
 
