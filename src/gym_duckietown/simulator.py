@@ -667,6 +667,22 @@ class Simulator(gym.Env):
 
         return self.reset_pos(segment = segment)
 
+    def set_pos(self, px: float, py: float):
+        self.cur_pos = np.array([px, 0, py])
+        init_vel = np.array([0, 0])
+
+        # Initialize Dynamics model
+        if self.dynamics_rand:
+            trim = 0 + self.randomization_settings["trim"][0]
+            p = get_DB18_uncalibrated(delay=0.15, trim=trim)
+        else:
+            p = get_DB18_nominal(delay=0.15)
+
+        q = self.cartesian_from_weird(self.cur_pos, self.cur_angle)
+        v0 = geometry.se2_from_linear_angular(init_vel, 0)
+        c0 = q, v0
+        self.state = p.initialize(c0=c0, t0=0)
+
     def reset_pos(self, segment = False):
         # If the map specifies a starting tile
         if self.user_tile_start:
@@ -1344,7 +1360,7 @@ class Simulator(gym.Env):
         return pts
 
     def closest_curve_point(
-        self, pos: np.array, angle: float
+        self, pos: np.array, angle: float, delta: float = 0.0
     ) -> Tuple[Optional[np.array], Optional[np.array]]:
         """
         Get the closest point on the curve to a given point
@@ -1371,7 +1387,7 @@ class Simulator(gym.Env):
         cps = curves[np.argmax(dot_prods)]
 
         # Find closest point and tangent to this curve
-        t = bezier_closest(cps, pos)
+        t = bezier_closest(cps, pos) + delta
         point = bezier_point(cps, t)
         tangent = bezier_tangent(cps, t)
 
