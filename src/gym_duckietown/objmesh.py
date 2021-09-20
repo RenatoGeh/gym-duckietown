@@ -261,7 +261,7 @@ class ObjMesh:
                 string,
             ):  # Dont care about having an awesome hash really, just want this to be deterministic
                 hashed = "".join([str(ord(char)) for char in string])
-                segment_into_color0 = [int(hashed[i : i + 3]) % 255 for i in range(0, len(hashed), 3)][:3]
+                segment_into_color0 = tuple(int(hashed[i : i + 3]) % 255 for i in range(0, 9, 3))
                 assert len(segment_into_color0) == 3
                 return segment_into_color0
 
