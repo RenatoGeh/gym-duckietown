@@ -565,8 +565,9 @@ class Simulator(gym.Env):
 
         # Randomize tile parameters
         for i, tile in enumerate(self.grid):
-            rng = self.np_random if self.domain_rand else None
-            f = rng.randint
+            if self.domain_rand:
+                rng = self.np_random
+                f = rng.randint
             kind = tile["kind"]
             print(f"Loading texture {i}/{len(self.grid)}")
             if self.domain_rand and (kind == "floor"):
@@ -582,7 +583,7 @@ class Simulator(gym.Env):
             obj.color = self._perturb([1, 1, 1, 1], 0.3)
 
             # Randomize whether the object is visible or not
-            if self.domain_rand:
+            if obj.optional and self.domain_rand:
                 obj.visible = self.np_random.randint(0, 2) == 0
             else:
                 obj.visible = True
