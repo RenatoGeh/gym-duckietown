@@ -534,6 +534,61 @@ class Simulator(gym.Env):
         ]
         self.ground_vlist = pyglet.graphics.vertex_list(4, ("v3f", verts))
 
+    def random_reset(self, segment: bool = False):
+        if self.randomize_maps_on_reset:
+            map_name = self.np_random.choice(self.map_names)
+            self._load_map(map_name)
+
+        self.randomization_settings = self.randomizer.randomize(rng=self.np_random)
+
+        if self.domain_rand:
+            self.horizon_color = self._perturb(self.color_sky)
+        else:
+            self.horizon_color = self.color_sky
+
+        # Ground color
+        self.ground_color = self._perturb(np.array(self.color_ground), 0.3)
+
+        # Create the vertex list for the ground/noise triangles
+        # These are distractors, junk on the floor
+        numTris = self.num_tris_distractors
+        verts = []
+        colors = []
+        for _ in range(0, 3 * numTris):
+            p = self.np_random.uniform(low=[-20, -0.6, -20], high=[20, -0.3, 20], size=(3,))
+            c = self.np_random.uniform(low=0, high=0.9)
+            c = self._perturb([c, c, c], 0.1)
+            verts += [p[0], p[1], p[2]]
+            colors += [c[0], c[1], c[2]]
+
+        self.tri_vlist = pyglet.graphics.vertex_list(3 * numTris, ("v3f", verts), ("c3f", colors))
+
+        # Randomize tile parameters
+        for i, tile in enumerate(self.grid):
+            rng = self.np_random if self.domain_rand else None
+            f = rng.randint
+            kind = tile["kind"]
+            print(f"Loading texture {i}/{len(self.grid)}")
+            if self.domain_rand and (kind == "floor"):
+                s = (f(0, 256), f(0, 256), f(0, 256))
+                fn = get_texture_file(f"tiles-processed/{self.style}/{kind}/texture")[0]
+                t = load_texture(fn, segment=True, segment_into_color=s)
+                tt = Texture(t, tex_name=kind, rng=rng)
+                tile["texture"] = tt
+
+        # Randomize object parameters
+        for obj in self.objects:
+            # Randomize the object color
+            obj.color = self._perturb([1, 1, 1, 1], 0.3)
+
+            # Randomize whether the object is visible or not
+            if self.domain_rand:
+                obj.visible = self.np_random.randint(0, 2) == 0
+            else:
+                obj.visible = True
+
+        return self.reset_pos(segment = segment)
+
     def reset(self, segment: bool = False):
         """
         Reset the simulation at the start of a new episode
@@ -1780,7 +1835,7 @@ class Simulator(gym.Env):
 
         # Clear the color and depth buffers
 
-        c0, c1, c2 = self.horizon_color if not segment else [255, 0, 255]
+        c0, c1, c2 = self.horizon_color if not segment else [0, 255, 0]
         gl.glClearColor(c0, c1, c2, 1.0)
         gl.glClearDepth(1.0)
         gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
@@ -1835,7 +1890,7 @@ class Simulator(gym.Env):
         # Draw the ground quad
         gl.glDisable(gl.GL_TEXTURE_2D)
         # background is magenta when segmenting for easy isolation of main map image
-        gl.glColor3f(*self.ground_color if not segment else [255, 0, 255])  # XXX
+        gl.glColor3f(*self.ground_color if not segment else [0, 255, 0])  # XXX
         gl.glPushMatrix()
         gl.glScalef(50, 0.01, 50)
         self.ground_vlist.draw(gl.GL_QUADS)
