@@ -1752,6 +1752,25 @@ class Simulator(gym.Env):
             reward = +1.0 * speed * lp.dot_dir + -10 * np.abs(lp.dist) + +40 * col_penalty
         return reward
 
+    def penalization(self, pos: g.T3value, angle: float, safety_factor: float = 1.0):
+        # Compute the coordinates of the base of both wheels
+        pos = _actual_center(pos, angle)
+        f_vec = get_dir_vec(angle)
+        r_vec = get_right_vec(angle)
+
+        l_pos = pos - (safety_factor * 0.5 * ROBOT_WIDTH) * r_vec
+        r_pos = pos + (safety_factor * 0.5 * ROBOT_WIDTH) * r_vec
+        f_pos = pos + (safety_factor * 0.5 * ROBOT_LENGTH) * f_vec
+
+        # Check that the center position and
+        # both wheels are on drivable tiles and no collisions
+
+        if not (self._drivable_pos(pos) and self._drivable_pos(l_pos) and self._drivable_pos(r_pos) and self._drivable_pos(f_pos)):
+            return "out"
+        elif self._collision(get_agent_corners(pos, angle)):
+            return "crash"
+        return None
+
     def step(self, action: np.ndarray):
         action = np.clip(action, -1, 1)
         # Actions could be a Python list
