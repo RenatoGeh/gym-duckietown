@@ -1818,6 +1818,7 @@ class Simulator(gym.Env):
         img_array,
         top_down: bool = True,
         segment: bool = False,
+        callback = None,
     ) -> np.ndarray:
         """
         Render an image of the environment into a frame buffer
@@ -2033,6 +2034,9 @@ class Simulator(gym.Env):
         draw_xyz_axes = False
         if draw_xyz_axes:
             draw_axes()
+
+        if callback is not None: callback()
+
         # Resolve the multisampled frame buffer into the final frame buffer
         gl.glBindFramebuffer(gl.GL_READ_FRAMEBUFFER, multi_fbo)
         gl.glBindFramebuffer(gl.GL_DRAW_FRAMEBUFFER, final_fbo)
